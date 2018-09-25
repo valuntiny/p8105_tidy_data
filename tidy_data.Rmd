@@ -12,3 +12,37 @@ data: 2018-09-25
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
+
+## section 1
+
+### gather
+
+```{r}
+pulse_data = haven::read_sas("./data_import_examples/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names()
+pulse_data
+```
+
+we can see this isn't a tidy data, for dbi is across 4 columns. So here we use `gather`:
+
+```{r}
+pulse_tidy = pulse_data %>%
+  gather(key = "visit", value = "bdi", bdi_score_bl:bdi_score_12m)
+pulse_tidy
+```
+
+### seperate
+
+```{r}
+pulse_df = 
+  haven::read_sas("./data_import_examples/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names() %>%
+  gather(key = visit, value = bdi, bdi_score_bl:bdi_score_12m) %>%
+  separate(visit, into = c("remove_1", "remove_2", "visit"), sep = "_") %>%
+  select(id, visit, everything(), -starts_with("remove")) %>%
+  mutate(visit = replace(visit, visit == "bl", "00m"),
+         visit = factor(visit, levels = str_c(c("00", "01", "06", "12"), "m"))) %>%
+  arrange(id, visit)
+pulse_df
+```
+
